@@ -1,0 +1,4 @@
+[package]
+name = "oxi"
+version = "0.1.0"
+authors = ["stuart.welham@gmail.com <stuart.welham@gmail.com>"]
