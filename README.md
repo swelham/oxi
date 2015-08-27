@@ -1,4 +1,4 @@
-# oxidize
+# oxi
 
 ## feature to do list
 
