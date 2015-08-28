@@ -18,3 +18,4 @@
   - plain text (using ```| some text``` syntax)
   - pretty print
   - sort this list to group features and add the remaining features
+  - write tests!
