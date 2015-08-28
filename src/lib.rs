@@ -1,4 +1,3 @@
-// TODO: Error handling, swap out panic!'s where appropriate
 use std::io;
 use std::io::prelude::*;
 use std::fs::File;
@@ -12,9 +11,8 @@ impl Compiler {
             Err(e) => return Err(format!("{}: {}", e, file_path))
         };
 
-        // TODO: make this better, need to say why it wasn't valid
-        if !doc.is_valid() {
-            return Err("The document is invalid (TODO: add the reason why here!)".to_string());
+        if let Some(e) = doc.validate() {
+            return Err(format!("{}: {}", e, file_path));
         }
 
         let output = doc.compile();
@@ -122,14 +120,16 @@ impl Document {
         })
     }
 
-    fn is_valid(&self) -> bool {
+    fn validate(&self) -> Option<&'static str> {
         if self.contents.len() == 0 {
-            return false;
+            return Some("The file was empty");
         }
 
-        // TODO: need to add first line check here (must be a doctype or extends)
+        if !self.contents.starts_with("doctype") && !self.contents.starts_with("extends") {
+            return Some("The document must start with a 'doctype' or 'extends'");
+        }
 
-        return true;
+        None
     }
 
     fn compile(self) -> String {
@@ -142,8 +142,13 @@ impl Document {
 
         for n in &nodes {
             if i == 0 {
-                // TODO: make this somewhat better, this was just lazy
-                output.push_str(&format!("<!DOCTYPE {}>", n.content).to_string());
+                if n.tokens[0] == "doctype" {
+                    // TODO: need to abstract this stuff to support multiple doctypes
+                    output.push_str(&format!("<!DOCTYPE {}>", n.content).to_string());
+                } /*else if n.tokens[0] == "extends" {
+                    // TODO: when extends is added
+                }*/
+
                 i += 1;
                 continue;
             }
@@ -229,6 +234,7 @@ fn split_tokens(s: String) -> (Vec<String>, String) {
 
         if c == ')' {
             if mode != 1 {
+                // TODO: proper error handling
                 panic!("Invalid attribute closing brace");
             }
 
