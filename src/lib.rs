@@ -143,8 +143,11 @@ impl Document {
         for n in &nodes {
             if i == 0 {
                 if n.tokens[0] == "doctype" {
-                    // TODO: need to abstract this stuff to support multiple doctypes
-                    output.push_str(&format!("<!DOCTYPE {}>", n.content).to_string());
+                    if let Some(doctype) = generate_doctype(&n.content) {
+                        output.push_str(&doctype.to_string());
+                    } else {
+                        panic!("Unknown 'doctype' suppied");
+                    }
                 } /*else if n.tokens[0] == "extends" {
                     // TODO: when extends is added
                 }*/
@@ -265,4 +268,13 @@ fn split_tokens(s: String) -> (Vec<String>, String) {
     }
 
     (tokens, content)
+}
+
+// TODO: need to abstract this stuff to support multiple doctypes
+fn generate_doctype(content: &String) -> Option<String> {
+    return match content.as_ref() {
+        "html" => Some(format!("<!DOCTYPE {}>", content)),
+        "xml" => Some("<?xml version=\"1.0\" encoding=\"utf-8\" ?>".to_string()),
+        _ => None
+    };
 }
