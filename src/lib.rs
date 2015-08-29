@@ -70,7 +70,6 @@ impl DocumentNode {
 
         output.push_str(&self.render_open().to_string());
 
-        // TODO: not a fan of how the self closing works itself out - could be smarter!
         if self.is_self_closing {
             return output;
         }
