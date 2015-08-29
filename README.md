@@ -17,7 +17,7 @@
   - [x] classes (using ```.className``` syntax)
   - [x] attributes (using ```(attr="value")``` syntax)
   - [x] omittable div tag when using classes or attributes
-  - [ ] option to explictly self close a tag wit the ```tag/``` syntax
+  - [x] option to explictly self close a tag wit the ```tag/``` syntax
   - [ ] plain text (using ```| some text``` syntax)
   - [ ] pretty print
   - [ ] sort this list to group features and add the remaining features

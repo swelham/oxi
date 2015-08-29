@@ -51,8 +51,14 @@ impl DocumentNode {
 
     fn render(&self) -> String {
         let mut output = String::new();
+        let open_tag = self.render_open();
 
-        output.push_str(&self.render_open().to_string());
+        output.push_str(&open_tag.to_string());
+
+        // TODO: not a fan of how the self closing works itself out - could be smarter!
+        if open_tag.ends_with("/>") {
+            return output;
+        }
 
         if !self.content.is_empty() {
             output.push_str(&self.content.to_string())
@@ -91,6 +97,10 @@ impl DocumentNode {
             if !attributes.is_empty() {
                 output.push_str(&format!(" {}", attributes).to_string());
             }
+        }
+
+        if self.tokens.last().unwrap() == "/" {
+            output.push('/');
         }
 
         output.push('>');
@@ -228,10 +238,7 @@ fn split_tokens(s: String) -> (Vec<String>, String) {
 
     for (i, c) in s.chars().enumerate() {
         if c.is_whitespace() && mode == 0 {
-            if start < i {
-                tokens.push(s[start..i].to_string());
-            }
-
+            tokens.push(s[start..i].to_string());
             content.push_str(&s[i..len].trim().to_string());
             break;
         }
@@ -247,7 +254,11 @@ fn split_tokens(s: String) -> (Vec<String>, String) {
             mode = 0;
             start = i;
         } else {
-            if (c == '#' || c == '.' || c == '(') || i == len - 1 {
+            if c == '/' {
+                tokens.push(s[start..i].to_string());
+                tokens.push("/".to_string());
+                start = i + 1;
+            } else if (c == '#' || c == '.' || c == '(') || i == len - 1 {
                 if i == len - 1 {
                     tokens.push(s[start..].to_string());
                 } else if i > start {
