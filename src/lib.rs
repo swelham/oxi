@@ -2,11 +2,19 @@ use std::io;
 use std::io::prelude::*;
 use std::fs::File;
 
+const INLINE_TAGS: [&'static str; 16] = [
+    "area", "base", "br", "col", "command", "embed", "hr", "img",
+    "input", "keygen", "link", "meta", "param", "source", "track", "wbr"];
+
+const DOCTYPE_HTML: &'static str = "html";
+const DOCTYPE_XML: &'static str = "xml";
+const DOCTYPE_JSON: &'static str = "json";
+
 pub struct Compiler;
 
 impl Compiler {
     pub fn compile(file_path: &'static str) -> Result<String, String> {
-        let doc = match Document::new(file_path) {
+        let mut doc = match Document::new(file_path) {
             Ok(doc) => doc,
             Err(e) => return Err(format!("{}: {}", e, file_path))
         };
@@ -25,11 +33,12 @@ impl Compiler {
 struct DocumentNode {
     depth: i32,
     tokens: Vec<String>,
-    content: String
+    content: String,
+    is_self_closing: bool
 }
 
 impl DocumentNode {
-    fn new(line: &str) -> DocumentNode {
+    fn new(line: &str, doctype: &str) -> DocumentNode {
         let mut indent = 0;
 
         for c in line.chars() {
@@ -41,22 +50,28 @@ impl DocumentNode {
         }
 
         let (tokens, content) = split_tokens(String::from(line.trim()));
+        let mut self_closing = false;
+        let last_token = &*tokens.last().unwrap().to_string();
+
+        if last_token == "/" || (doctype == DOCTYPE_HTML && INLINE_TAGS.contains(&&*tokens[0].to_string())) {
+            self_closing = true;
+        }
 
         DocumentNode {
             depth: indent,
             tokens: tokens,
-            content: content
+            content: content,
+            is_self_closing: self_closing
         }
     }
 
     fn render(&self) -> String {
         let mut output = String::new();
-        let open_tag = self.render_open();
 
-        output.push_str(&open_tag.to_string());
+        output.push_str(&self.render_open().to_string());
 
         // TODO: not a fan of how the self closing works itself out - could be smarter!
-        if open_tag.ends_with("/>") {
+        if self.is_self_closing {
             return output;
         }
 
@@ -99,7 +114,7 @@ impl DocumentNode {
             }
         }
 
-        if self.tokens.last().unwrap() == "/" {
+        if self.is_self_closing {
             output.push('/');
         }
 
@@ -114,7 +129,8 @@ impl DocumentNode {
 
 struct Document {
     path: &'static str,
-    contents: String
+    contents: String,
+    doctype: &'static str
 }
 
 impl Document {
@@ -126,11 +142,12 @@ impl Document {
 
         Ok(Document {
             path: path,
-            contents: contents
+            contents: contents,
+            doctype: "unknown"
         })
     }
 
-    fn validate(&self) -> Option<&'static str> {
+    fn validate(&mut self) -> Option<&'static str> {
         if self.contents.len() == 0 {
             return Some("The file was empty");
         }
@@ -139,11 +156,19 @@ impl Document {
             return Some("The document must start with a 'doctype' or 'extends'");
         }
 
+        // TODO: this isn't future proof, will need fixing
+        match self.contents.lines().collect::<Vec<_>>()[0] {
+            "doctype html" => self.doctype = DOCTYPE_HTML,
+            "doctype xml" => self.doctype = DOCTYPE_XML,
+            "doctype json" => self.doctype = DOCTYPE_JSON,
+            _ => return Some("Unknown 'doctype' supplied")
+        }
+
         None
     }
 
     fn compile(self) -> String {
-        let nodes = parse(self.contents);
+        let nodes = parse(self);
 
         let mut parent_stack: Vec<&DocumentNode> = Vec::new();
         let mut output = String::new();
@@ -214,15 +239,15 @@ impl Document {
     }
 }
 
-fn parse(content: String) -> Vec<DocumentNode> {
+fn parse(doc: Document) -> Vec<DocumentNode> {
     let mut nodes: Vec<DocumentNode> = Vec::new();
 
-    for line in content.lines() {
+    for line in doc.contents.lines() {
         if line.is_empty() {
             continue;
         }
 
-        nodes.push(DocumentNode::new(line));
+        nodes.push(DocumentNode::new(line, doc.doctype));
     }
 
     nodes
@@ -254,11 +279,11 @@ fn split_tokens(s: String) -> (Vec<String>, String) {
             mode = 0;
             start = i;
         } else {
-            if c == '/' {
+            if c == '/' && mode == 0 {
                 tokens.push(s[start..i].to_string());
                 tokens.push("/".to_string());
                 start = i + 1;
-            } else if (c == '#' || c == '.' || c == '(') || i == len - 1 {
+            } else if ((c == '#' || c == '.' || c == '(') && mode == 0) || i == len - 1 {
                 if i == len - 1 {
                     tokens.push(s[start..].to_string());
                 } else if i > start {

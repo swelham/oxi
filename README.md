@@ -13,7 +13,7 @@
      - [ ] json
   - [x] basic tags
   - [x] nested tags
-  - [ ] self closing tags (this needs to take the ```doctype``` into account)
+  - [x] self closing tags (this needs to take the ```doctype``` into account)
   - [x] classes (using ```.className``` syntax)
   - [x] attributes (using ```(attr="value")``` syntax)
   - [x] omittable div tag when using classes or attributes
