@@ -146,6 +146,7 @@ impl Document {
                     if let Some(doctype) = generate_doctype(&n.content) {
                         output.push_str(&doctype.to_string());
                     } else {
+                        // TODO: proper error handling
                         panic!("Unknown 'doctype' suppied");
                     }
                 } /*else if n.tokens[0] == "extends" {
