@@ -68,6 +68,11 @@ impl DocumentNode {
     fn render(&self) -> String {
         let mut output = String::new();
 
+        if self.tokens[0] == "|" {
+            output.push_str(&self.content.to_string());
+            return output;
+        }
+
         output.push_str(&self.render_open().to_string());
 
         if self.is_self_closing {
@@ -197,10 +202,7 @@ impl Document {
 
             if has_sub {
                 output.push_str(&n.render_open().to_string());
-
-                if has_sub {
-                    parent_stack.push(n);
-                }
+                parent_stack.push(n);
             } else {
                 output.push_str(&n.render().to_string());
 
@@ -267,7 +269,11 @@ fn split_tokens(s: String) -> (Vec<String>, String) {
             break;
         }
 
-        if c == ')' {
+        if c == '|' && i == 0 {
+            tokens.push("|".to_string());
+            content.push_str(&s[1..].trim().to_string());
+            break;
+        } else if c == ')' {
             if mode != 1 {
                 // TODO: proper error handling
                 panic!("Invalid attribute closing brace");
