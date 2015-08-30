@@ -20,5 +20,14 @@
   - [x] option to explictly self close a tag wit the ```tag/``` syntax
   - [x] plain text (using ```| some text``` syntax)
   - [x] pretty print
+  - [ ] filter blocks (applied when nested code is discovered under this tag - all nested code is not parsed)
+     - [ ] javascript (using standard ```script``` tag)
+     - [ ] css (using standard ```style``` tag)
+  - [ ] code comments
+     - [ ] templates comments (ignored by parser)
+     - [ ] html comments (renderd using standard html comment syntax ```<!-- -->```)
+  - [ ] mixins
+  - [ ] inheritance (the ```extends``` feature)
+  - [ ] includes (allows injection of content from another template)
   - [ ] sort this list to group features and add the remaining features
   - [ ] write tests!
