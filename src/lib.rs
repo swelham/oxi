@@ -13,7 +13,7 @@ const DOCTYPE_JSON: &'static str = "json";
 pub struct Compiler;
 
 impl Compiler {
-    pub fn compile(file_path: &'static str) -> Result<String, String> {
+    pub fn compile(file_path: &'static str, pretty: bool) -> Result<String, String> {
         let mut doc = match Document::new(file_path) {
             Ok(doc) => doc,
             Err(e) => return Err(format!("{}: {}", e, file_path))
@@ -23,7 +23,7 @@ impl Compiler {
             return Err(format!("{}: {}", e, file_path));
         }
 
-        let output = doc.compile();
+        let output = doc.compile(pretty);
 
         Ok(output)
     }
@@ -31,7 +31,7 @@ impl Compiler {
 
 // TODO: move document into its own file
 struct DocumentNode {
-    depth: i32,
+    depth: usize,
     tokens: Vec<String>,
     content: String,
     is_self_closing: bool
@@ -65,29 +65,43 @@ impl DocumentNode {
         }
     }
 
-    fn render(&self) -> String {
+    fn render(&self, pretty: bool) -> String {
         let mut output = String::new();
 
         if self.tokens[0] == "|" {
             output.push_str(&self.content.to_string());
-            return output;
+
+            if pretty {
+                return pretty_print(&output, self.depth);
+            } else {
+                return output;
+            }
         }
 
-        output.push_str(&self.render_open().to_string());
+        output.push_str(&self.render_open(false).to_string());
 
         if self.is_self_closing {
+            if pretty {
+                return pretty_print(&output, self.depth);
+            }
+
             return output;
         }
 
         if !self.content.is_empty() {
-            output.push_str(&self.content.to_string())
+            output.push_str(&self.content.to_string());
         }
 
-        output.push_str(&self.render_end().to_string());
+        output.push_str(&self.render_end(false).to_string());
+
+        if pretty {
+            return pretty_print(&output, self.depth);
+        }
+
         output
     }
 
-    fn render_open(&self) -> String {
+    fn render_open(&self, pretty: bool) -> String {
         let tag_tokens = &self.tokens;
         let mut output = String::new();
 
@@ -123,11 +137,22 @@ impl DocumentNode {
         }
 
         output.push('>');
+
+        if pretty {
+            return pretty_print(&output, self.depth);
+        }
+
         output
     }
 
-    fn render_end(&self) -> String {
-        format!("</{}>", &self.tokens[0])
+    fn render_end(&self, pretty: bool) -> String {
+        let output = format!("</{}>", &self.tokens[0]);
+
+        if pretty {
+            return pretty_print(&output, self.depth);
+        }
+
+        output
     }
 }
 
@@ -171,7 +196,7 @@ impl Document {
         None
     }
 
-    fn compile(self) -> String {
+    fn compile(self, pretty: bool) -> String {
         let nodes = parse(self);
 
         let mut parent_stack: Vec<&DocumentNode> = Vec::new();
@@ -184,6 +209,10 @@ impl Document {
                 if n.tokens[0] == "doctype" {
                     if let Some(doctype) = generate_doctype(&n.content) {
                         output.push_str(&doctype.to_string());
+
+                        if pretty {
+                            output.push('\n');
+                        }
                     } else {
                         // TODO: proper error handling
                         panic!("Unknown 'doctype' suppied");
@@ -201,17 +230,17 @@ impl Document {
             let has_sub = has_next && nodes[i + 1].depth > n.depth;
 
             if has_sub {
-                output.push_str(&n.render_open().to_string());
+                output.push_str(&n.render_open(pretty).to_string());
                 parent_stack.push(n);
             } else {
-                output.push_str(&n.render().to_string());
+                output.push_str(&n.render(pretty).to_string());
 
                 if has_next && nodes[i + 1].depth < n.depth {
                     loop {
                         match parent_stack.pop() {
                             None =>  { break; },
                             Some(p) => {
-                                output.push_str(&p.render_end().to_string());
+                                output.push_str(&p.render_end(pretty).to_string());
 
                                 if p.depth == nodes[i + 1].depth {
                                     break;
@@ -227,7 +256,7 @@ impl Document {
                     match parent_stack.pop() {
                         None =>  { break; },
                         Some(p) => {
-                            output.push_str(&p.render_end().to_string());
+                            output.push_str(&p.render_end(pretty).to_string());
                         }
                     }
                 }
@@ -319,4 +348,18 @@ fn generate_doctype(content: &String) -> Option<String> {
         "xml" => Some("<?xml version=\"1.0\" encoding=\"utf-8\" ?>".to_string()),
         _ => None
     };
+}
+
+// TODO: look at making this a macro
+// TODO: reduce if statements when using this by applying it always with a flag to indicate which format to use
+fn pretty_print(content: &String, depth: usize) -> String {
+    let mut output = String::new();
+
+    for _ in 0..depth {
+        output.push(' ');
+    }
+
+    output.push_str(&*content);
+    output.push('\n');
+    output
 }
