@@ -11,9 +11,9 @@ const DOCTYPE_XML: &'static str = "xml";
 const DOCTYPE_JSON: &'static str = "json";
 
 pub struct Document {
-    path: &'static str,
-    contents: String,
-    doctype: &'static str
+    pub path: &'static str,
+    pub contents: String,
+    pub doctype: &'static str
 }
 
 impl Document {
@@ -49,18 +49,33 @@ impl Document {
 
         None
     }
+
+    pub fn render_doctype(&self, node: &DocumentNode, pretty: bool) -> Option<String> {
+        if node.tokens[0] == "doctype" {
+            if let Some(doctype) = generate_doctype(&node.content) {
+                if pretty {
+                    return Some(format!("{}\n", doctype));
+                }
+
+                return Some(doctype);
+            }
+        } /*else if n.tokens[0] == "extends" {
+            // TODO: when extends is added
+        }*/
+        None
+    }
 }
 
 pub struct DocumentNode {
-    depth: usize,
-    tokens: Vec<String>,
-    content: String,
-    is_self_closing: bool,
-    ignore_sub_content: bool
+    pub depth: usize,
+    pub tokens: Vec<String>,
+    pub content: String,
+    pub is_self_closing: bool,
+    pub ignore_sub_content: bool
 }
 
 impl DocumentNode {
-    fn from_content(indent: usize, content: String) -> DocumentNode {
+    pub fn from_content(indent: usize, content: String) -> DocumentNode {
         DocumentNode {
             depth: indent,
             tokens: vec!["|".to_string()],
@@ -70,7 +85,7 @@ impl DocumentNode {
         }
     }
 
-    fn from(line: &str, indent: usize, doctype: &str) -> Option<DocumentNode> {
+    pub fn from(line: &str, indent: usize, doctype: &str) -> Option<DocumentNode> {
         let (tokens, content) = match split_tokens(String::from(line.trim())) {
             Some(result) => result,
             None => return None
@@ -103,7 +118,7 @@ impl DocumentNode {
         })
     }
 
-    fn render(&self, pretty: bool) -> String {
+    pub fn render(&self, pretty: bool) -> String {
         let mut output = String::new();
 
         if self.tokens[0] == "|" {
@@ -139,7 +154,7 @@ impl DocumentNode {
         output
     }
 
-    fn render_open(&self, pretty: bool) -> String {
+    pub fn render_open(&self, pretty: bool) -> String {
         let tag_tokens = &self.tokens;
         let mut output = String::new();
 
@@ -189,7 +204,7 @@ impl DocumentNode {
         output
     }
 
-    fn render_end(&self, pretty: bool) -> String {
+    pub fn render_end(&self, pretty: bool) -> String {
         let output = match self.tokens[0].as_ref() {
             "//" => "-->".to_string(),
             "|" => String::new(),
@@ -202,51 +217,6 @@ impl DocumentNode {
 
         output
     }
-}
-
-fn parse(doc: Document) -> Vec<DocumentNode> {
-    let mut nodes: Vec<DocumentNode> = Vec::new();
-    let mut parsable_indent = 0;
-    let mut mode = 0;
-
-    for line in doc.contents.lines() {
-        if line.is_empty() {
-            continue;
-        }
-
-        let mut indent: usize = 0;
-
-        for c in line.chars() {
-            if c.is_whitespace() {
-                indent += 1;
-            } else {
-                break;
-            }
-        }
-
-        if mode == 2 && indent > parsable_indent {
-            continue;
-        } else if mode == 1 && indent > parsable_indent {
-            nodes.push(DocumentNode::from_content(indent, line.trim().to_string()));
-            continue;
-        }
-
-        if let Some(node) = DocumentNode::from(line, indent, doc.doctype) {
-            if node.ignore_sub_content {
-                mode = 1;
-            } else {
-                mode = 0;
-            }
-
-            nodes.push(node);
-        } else {
-            mode = 2;
-        }
-
-        parsable_indent = indent;
-    }
-
-    nodes
 }
 
 fn split_tokens(s: String) -> Option<(Vec<String>, String)> {

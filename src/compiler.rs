@@ -1,4 +1,4 @@
-use document::Document;
+use document::{Document, DocumentNode};
 
 pub struct Compiler;
 
@@ -13,13 +13,13 @@ impl Compiler {
             return Err(format!("{}: {}", e, file_path));
         }
 
-        let output = self.compile(doc, pretty);
+        let output = try!(Compiler::compile_document(&doc, pretty));
 
         Ok(output)
     }
 
-    pub fn compile_document(doc: Document, pretty: bool) -> String {
-        let nodes = parse(self);
+    fn compile_document(doc: &Document, pretty: bool) -> Result<String, String> {
+        let nodes = parse(doc);
 
         let mut parent_stack: Vec<&DocumentNode> = Vec::new();
         let mut output = String::new();
@@ -28,20 +28,9 @@ impl Compiler {
 
         for n in &nodes {
             if i == 0 {
-                if n.tokens[0] == "doctype" {
-                    if let Some(doctype) = generate_doctype(&n.content) {
-                        output.push_str(&doctype.to_string());
-
-                        if pretty {
-                            output.push('\n');
-                        }
-                    } else {
-                        // TODO: proper error handling
-                        panic!("Unknown 'doctype' suppied");
-                    }
-                } /*else if n.tokens[0] == "extends" {
-                    // TODO: when extends is added
-                }*/
+                if let Some(doctype) = doc.render_doctype(n, pretty) {
+                    output.push_str(&doctype.to_string());
+                }
 
                 i += 1;
                 continue;
@@ -95,6 +84,51 @@ impl Compiler {
             i += 1;
         }
 
-        output
+        Ok(output)
     }
+}
+
+fn parse(doc: &Document) -> Vec<DocumentNode> {
+    let mut nodes: Vec<DocumentNode> = Vec::new();
+    let mut parsable_indent = 0;
+    let mut mode = 0;
+
+    for line in doc.contents.lines() {
+        if line.is_empty() {
+            continue;
+        }
+
+        let mut indent: usize = 0;
+
+        for c in line.chars() {
+            if c.is_whitespace() {
+                indent += 1;
+            } else {
+                break;
+            }
+        }
+
+        if mode == 2 && indent > parsable_indent {
+            continue;
+        } else if mode == 1 && indent > parsable_indent {
+            nodes.push(DocumentNode::from_content(indent, line.trim().to_string()));
+            continue;
+        }
+
+        if let Some(node) = DocumentNode::from(line, indent, doc.doctype) {
+            if node.ignore_sub_content {
+                mode = 1;
+            } else {
+                mode = 0;
+            }
+
+            nodes.push(node);
+        } else {
+            mode = 2;
+        }
+
+        parsable_indent = indent;
+    }
+
+    nodes
 }
