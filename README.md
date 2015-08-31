@@ -20,7 +20,7 @@
   - [x] option to explictly self close a tag wit the ```tag/``` syntax
   - [x] plain text (using ```| some text``` syntax)
   - [x] pretty print
-  - [ ] filter blocks (applied when nested code is discovered under this tag - all nested code is not parsed)
+  - [ ] html code blocks (applied when nested code is discovered under this tag - all nested code is not parsed)
      - [ ] javascript (using standard ```script``` tag)
      - [ ] css (using standard ```style``` tag)
   - [x] code comments
