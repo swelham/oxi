@@ -25,7 +25,7 @@
      - [ ] css (using standard ```style``` tag)
   - [ ] code comments
      - [x] templates comments (ignored by parser)
-     - [x] html comments (renderd using standard html comment syntax ```<!-- -->```)
+     - [x] html/xml comments (renderd using standard xml comment syntax ```<!-- -->```)
      - [ ] nested comments
   - [ ] mixins
   - [ ] inheritance (the ```extends``` feature)
