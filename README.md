@@ -8,7 +8,7 @@
     - [ ] ```xml``` documents can only use basic tags and attributes
     - [ ] ```json``` validation considerations
   - [ ] fully implement support for all ```doctype``` options
-     - [ ] html
+     - [x] html
      - [x] xml
      - [ ] json
   - [x] basic tags
