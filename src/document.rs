@@ -161,10 +161,18 @@ impl DocumentNode {
         let mut ignore_sub_content = false;
         let last_token = &*tokens.last().unwrap().to_string();
 
-        if tokens[0] == "//" || tokens[0] == "|" || tokens[0] == "style" || tokens[0] == "script" {
+        if tokens[0] == "//" || tokens[0] == "|" {
             ignore_sub_content = true;
-        } else if last_token == "/" || (doctype == DOCTYPE_HTML && INLINE_TAGS.contains(&&*tokens[0].to_string())) {
+        } else if last_token == "/" {
             is_self_closing = true;
+        }
+
+        if doctype == DOCTYPE_HTML {
+            if tokens[0] == "style" || tokens[0] == "script" {
+                ignore_sub_content = true;
+            } else if INLINE_TAGS.contains(&&*tokens[0].to_string()) {
+                is_self_closing = true;
+            }
         }
 
         Some(DocumentNode {
