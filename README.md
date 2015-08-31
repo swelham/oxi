@@ -23,10 +23,10 @@
   - [ ] filter blocks (applied when nested code is discovered under this tag - all nested code is not parsed)
      - [ ] javascript (using standard ```script``` tag)
      - [ ] css (using standard ```style``` tag)
-  - [ ] code comments
+  - [x] code comments
      - [x] templates comments (ignored by parser)
      - [x] html/xml comments (renderd using standard xml comment syntax ```<!-- -->```)
-     - [ ] nested comments
+     - [x] nested comments
   - [ ] mixins
   - [ ] inheritance (the ```extends``` feature)
   - [ ] includes (allows injection of content from another template)

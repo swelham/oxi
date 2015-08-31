@@ -116,6 +116,14 @@ impl Document {
                 }
             }
 
+            if !pretty && has_next {
+                let next = &nodes[i + 1];
+
+                if n.tokens[0] == "|" && next.tokens[0] == "|" {
+                    output.push(' ');
+                }
+            }
+
             i += 1;
         }
 
@@ -128,32 +136,32 @@ pub struct DocumentNode {
     tokens: Vec<String>,
     content: String,
     is_self_closing: bool,
-    is_comment: bool
+    ignore_content: bool
 }
 
 impl DocumentNode {
-    fn from(line: &str, doctype: &str) -> Option<DocumentNode> {
-        let mut indent = 0;
-
-        for c in line.chars() {
-            if c.is_whitespace() {
-                indent += 1;
-            } else {
-                break;
-            }
+    fn from_content(indent: usize, content: String) -> DocumentNode {
+        DocumentNode {
+            depth: indent,
+            tokens: vec!["|".to_string()],
+            content: content,
+            is_self_closing: false,
+            ignore_content: true
         }
+    }
 
+    fn from(line: &str, indent: usize, doctype: &str) -> Option<DocumentNode> {
         let (tokens, content) = match split_tokens(String::from(line.trim())) {
             Some(result) => result,
             None => return None
         };
 
         let mut is_self_closing = false;
-        let mut is_comment = false;
+        let mut ignore_content = false;
         let last_token = &*tokens.last().unwrap().to_string();
 
-        if tokens[0] == "//" {
-            is_comment = true;
+        if tokens[0] == "//" || tokens[0] == "|" {
+            ignore_content = true;
         } else if last_token == "/" || (doctype == DOCTYPE_HTML && INLINE_TAGS.contains(&&*tokens[0].to_string())) {
             is_self_closing = true;
         }
@@ -163,7 +171,7 @@ impl DocumentNode {
             tokens: tokens,
             content: content,
             is_self_closing: is_self_closing,
-            is_comment: is_comment
+            ignore_content: ignore_content
         })
     }
 
@@ -207,8 +215,10 @@ impl DocumentNode {
         let tag_tokens = &self.tokens;
         let mut output = String::new();
 
-        if self.is_comment {
+        if tag_tokens[0] == "//" {
             output.push_str("<!--");
+        } else if tag_tokens[0] == "|" {
+            output.push_str(&self.content.to_string());
         } else {
             output.push_str(&format!("<{}", tag_tokens[0]).to_string());
 
@@ -252,12 +262,13 @@ impl DocumentNode {
     }
 
     fn render_end(&self, pretty: bool) -> String {
-        let output = match self.is_comment {
-            true => "-->".to_string(),
-            false => format!("</{}>", &self.tokens[0])
+        let output = match self.tokens[0].as_ref() {
+            "//" => "-->".to_string(),
+            "|" => String::new(),
+            _ => format!("</{}>", &self.tokens[0])
         };
 
-        if pretty {
+        if pretty && !output.is_empty() {
             return pretty_print(&output, self.depth);
         }
 
@@ -267,15 +278,44 @@ impl DocumentNode {
 
 fn parse(doc: Document) -> Vec<DocumentNode> {
     let mut nodes: Vec<DocumentNode> = Vec::new();
+    let mut parsable_indent = 0;
+    let mut mode = 0;
 
     for line in doc.contents.lines() {
         if line.is_empty() {
             continue;
         }
 
-        if let Some(node) = DocumentNode::from(line, doc.doctype) {
-            nodes.push(node);
+        let mut indent: usize = 0;
+
+        for c in line.chars() {
+            if c.is_whitespace() {
+                indent += 1;
+            } else {
+                break;
+            }
         }
+
+        if mode == 2 && indent > parsable_indent {
+            continue;
+        } else if mode == 1 && indent > parsable_indent {
+            nodes.push(DocumentNode::from_content(indent, line.trim().to_string()));
+            continue;
+        }
+
+        if let Some(node) = DocumentNode::from(line, indent, doc.doctype) {
+            if node.ignore_content {
+                mode = 1;
+            } else {
+                mode = 0;
+            }
+
+            nodes.push(node);
+        } else {
+            mode = 2;
+        }
+
+        parsable_indent = indent;
     }
 
     nodes
