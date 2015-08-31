@@ -40,7 +40,7 @@
      - [ ] block append
   - [ ] includes (allows injection of content from another document)
      - [ ] template inclusion (using ```include ./another_template.oxi```)
-     - [ ] plain text inclusing (same syntax as above, all files without a template extension are treated as plain text)
+     - [ ] plain text inclusion (same syntax as above, all files without a template extension are treated as plain text)
      - [ ] include filtered file (using ```include:markdown ./file.md``` syntax)
   - [ ] data binding
   - [ ] sort this list to group features and add the remaining features
