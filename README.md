@@ -23,7 +23,7 @@
   - [x] html code blocks (applied when nested code is discovered under this tag - all nested code is not parsed)
      - [x] javascript (using standard ```script``` tag)
      - [x] css (using standard ```style``` tag)
-  - [ ] code block minification
+  - [ ] code block minification when not using pretty print
   - [ ] filter blocks (using the ```:filter``` syntax)
      - [ ] ```:markdown```
      - [ ] ```:coffee``` (only in ```script``` code block)
