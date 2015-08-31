@@ -160,7 +160,7 @@ impl DocumentNode {
         let mut ignore_sub_content = false;
         let last_token = &*tokens.last().unwrap().to_string();
 
-        if tokens[0] == "//" || tokens[0] == "|" || tokens[0] == "style" {
+        if tokens[0] == "//" || tokens[0] == "|" || tokens[0] == "style" || tokens[0] == "script" {
             ignore_sub_content = true;
         } else if last_token == "/" || (doctype == DOCTYPE_HTML && INLINE_TAGS.contains(&&*tokens[0].to_string())) {
             is_self_closing = true;

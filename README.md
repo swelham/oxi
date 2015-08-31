@@ -20,8 +20,8 @@
   - [x] option to explictly self close a tag wit the ```tag/``` syntax
   - [x] plain text (using ```| some text``` syntax)
   - [x] pretty print
-  - [ ] html code blocks (applied when nested code is discovered under this tag - all nested code is not parsed)
-     - [ ] javascript (using standard ```script``` tag)
+  - [x] html code blocks (applied when nested code is discovered under this tag - all nested code is not parsed)
+     - [x] javascript (using standard ```script``` tag)
      - [x] css (using standard ```style``` tag)
   - [x] code comments
      - [x] templates comments (ignored by parser)
