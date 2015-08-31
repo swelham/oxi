@@ -35,7 +35,11 @@
      - [x] nested comments
   - [ ] mixins
   - [ ] inheritance (the ```extends``` feature)
+     - [ ] blocks
+     - [ ] nested blocks
+     - [ ] block append
   - [ ] includes (allows injection of content from another template)
   - [ ] data binding
   - [ ] sort this list to group features and add the remaining features
   - [ ] write tests!
+  - [ ] write documentation
