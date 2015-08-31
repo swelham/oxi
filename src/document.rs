@@ -136,7 +136,7 @@ pub struct DocumentNode {
     tokens: Vec<String>,
     content: String,
     is_self_closing: bool,
-    ignore_content: bool
+    ignore_sub_content: bool
 }
 
 impl DocumentNode {
@@ -146,7 +146,7 @@ impl DocumentNode {
             tokens: vec!["|".to_string()],
             content: content,
             is_self_closing: false,
-            ignore_content: true
+            ignore_sub_content: true
         }
     }
 
@@ -157,11 +157,11 @@ impl DocumentNode {
         };
 
         let mut is_self_closing = false;
-        let mut ignore_content = false;
+        let mut ignore_sub_content = false;
         let last_token = &*tokens.last().unwrap().to_string();
 
-        if tokens[0] == "//" || tokens[0] == "|" {
-            ignore_content = true;
+        if tokens[0] == "//" || tokens[0] == "|" || tokens[0] == "style" {
+            ignore_sub_content = true;
         } else if last_token == "/" || (doctype == DOCTYPE_HTML && INLINE_TAGS.contains(&&*tokens[0].to_string())) {
             is_self_closing = true;
         }
@@ -171,7 +171,7 @@ impl DocumentNode {
             tokens: tokens,
             content: content,
             is_self_closing: is_self_closing,
-            ignore_content: ignore_content
+            ignore_sub_content: ignore_sub_content
         })
     }
 
@@ -304,7 +304,7 @@ fn parse(doc: Document) -> Vec<DocumentNode> {
         }
 
         if let Some(node) = DocumentNode::from(line, indent, doc.doctype) {
-            if node.ignore_content {
+            if node.ignore_sub_content {
                 mode = 1;
             } else {
                 mode = 0;
