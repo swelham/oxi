@@ -24,7 +24,7 @@
      - [ ] javascript (using standard ```script``` tag)
      - [ ] css (using standard ```style``` tag)
   - [ ] code comments
-     - [ ] templates comments (ignored by parser)
+     - [x] templates comments (ignored by parser)
      - [ ] html comments (renderd using standard html comment syntax ```<!-- -->```)
   - [ ] mixins
   - [ ] inheritance (the ```extends``` feature)

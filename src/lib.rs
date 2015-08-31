@@ -38,7 +38,7 @@ struct DocumentNode {
 }
 
 impl DocumentNode {
-    fn new(line: &str, doctype: &str) -> DocumentNode {
+    fn from(line: &str, doctype: &str) -> Option<DocumentNode> {
         let mut indent = 0;
 
         for c in line.chars() {
@@ -49,7 +49,11 @@ impl DocumentNode {
             }
         }
 
-        let (tokens, content) = split_tokens(String::from(line.trim()));
+        let (tokens, content) = match split_tokens(String::from(line.trim())) {
+            Some(result) => result,
+            None => return None
+        };
+
         let mut self_closing = false;
         let last_token = &*tokens.last().unwrap().to_string();
 
@@ -57,12 +61,12 @@ impl DocumentNode {
             self_closing = true;
         }
 
-        DocumentNode {
+        Some(DocumentNode {
             depth: indent,
             tokens: tokens,
             content: content,
             is_self_closing: self_closing
-        }
+        })
     }
 
     fn render(&self, pretty: bool) -> String {
@@ -277,19 +281,35 @@ fn parse(doc: Document) -> Vec<DocumentNode> {
             continue;
         }
 
-        nodes.push(DocumentNode::new(line, doc.doctype));
+        if let Some(node) = DocumentNode::from(line, doc.doctype) {
+            nodes.push(node);
+        }
     }
 
     nodes
 }
 
-fn split_tokens(s: String) -> (Vec<String>, String) {
+fn split_tokens(s: String) -> Option<(Vec<String>, String)> {
     let mut tokens: Vec<String> = Vec::new();
 
     let mut start = 0;
     let len = s.len();
     let mut mode = 0;
     let mut content = String::new();
+
+    if s.starts_with("|") {
+        tokens.push("|".to_string());
+        content.push_str(&s[1..].trim().to_string());
+    } else if s.starts_with("//-") {
+        return None;
+    } else if s.starts_with("//") {
+        // tokens.push("/");
+        // content.push_str(&s[2..].trim().to_string());
+    }
+
+    if tokens.len() > 0 {
+        return Some((tokens, content));
+    }
 
     for (i, c) in s.chars().enumerate() {
         if c.is_whitespace() && mode == 0 {
@@ -298,11 +318,7 @@ fn split_tokens(s: String) -> (Vec<String>, String) {
             break;
         }
 
-        if c == '|' && i == 0 {
-            tokens.push("|".to_string());
-            content.push_str(&s[1..].trim().to_string());
-            break;
-        } else if c == ')' {
+        if c == ')' {
             if mode != 1 {
                 // TODO: proper error handling
                 panic!("Invalid attribute closing brace");
@@ -338,7 +354,7 @@ fn split_tokens(s: String) -> (Vec<String>, String) {
         tokens.insert(0, "div".to_string());
     }
 
-    (tokens, content)
+    Some((tokens, content))
 }
 
 // TODO: need to abstract this stuff to support multiple doctypes
@@ -359,7 +375,7 @@ fn pretty_print(content: &String, depth: usize) -> String {
         output.push(' ');
     }
 
-    output.push_str(&*content);
+    output.push_str(&content.to_string());
     output.push('\n');
     output
 }
