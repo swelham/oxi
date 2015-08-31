@@ -34,7 +34,8 @@ struct DocumentNode {
     depth: usize,
     tokens: Vec<String>,
     content: String,
-    is_self_closing: bool
+    is_self_closing: bool,
+    is_comment: bool
 }
 
 impl DocumentNode {
@@ -54,18 +55,22 @@ impl DocumentNode {
             None => return None
         };
 
-        let mut self_closing = false;
+        let mut is_self_closing = false;
+        let mut is_comment = false;
         let last_token = &*tokens.last().unwrap().to_string();
 
-        if last_token == "/" || (doctype == DOCTYPE_HTML && INLINE_TAGS.contains(&&*tokens[0].to_string())) {
-            self_closing = true;
+        if tokens[0] == "//" {
+            is_comment = true;
+        } else if last_token == "/" || (doctype == DOCTYPE_HTML && INLINE_TAGS.contains(&&*tokens[0].to_string())) {
+            is_self_closing = true;
         }
 
         Some(DocumentNode {
             depth: indent,
             tokens: tokens,
             content: content,
-            is_self_closing: self_closing
+            is_self_closing: is_self_closing,
+            is_comment: is_comment
         })
     }
 
@@ -109,38 +114,42 @@ impl DocumentNode {
         let tag_tokens = &self.tokens;
         let mut output = String::new();
 
-        output.push_str(&format!("<{}", tag_tokens[0]).to_string());
+        if self.is_comment {
+            output.push_str("<!--");
+        } else {
+            output.push_str(&format!("<{}", tag_tokens[0]).to_string());
 
-        if tag_tokens.len() > 1 {
-            let mut classes = String::new();
-            let mut attributes = String::new();
+            if tag_tokens.len() > 1 {
+                let mut classes = String::new();
+                let mut attributes = String::new();
 
-            for t in &tag_tokens[1..] {
-                if t.starts_with('#') {
-                    output.push_str(&format!(" id=\"{}\"", t[1..].to_string()))
-                } else if t.starts_with('.') {
-                    classes.push_str(&format!(" {}", t[1..].to_string()));
-                } else if t.starts_with('(') {
-                    let attrs: Vec<_> = t[1..].split(',').collect();
+                for t in &tag_tokens[1..] {
+                    if t.starts_with('#') {
+                        output.push_str(&format!(" id=\"{}\"", t[1..].to_string()))
+                    } else if t.starts_with('.') {
+                        classes.push_str(&format!(" {}", t[1..].to_string()));
+                    } else if t.starts_with('(') {
+                        let attrs: Vec<_> = t[1..].split(',').collect();
 
-                    attributes.push_str(&attrs.concat().to_string());
+                        attributes.push_str(&attrs.concat().to_string());
+                    }
+                }
+
+                if !classes.is_empty() {
+                    output.push_str(&format!(" class=\"{}\"", classes.trim()));
+                }
+
+                if !attributes.is_empty() {
+                    output.push_str(&format!(" {}", attributes).to_string());
                 }
             }
 
-            if !classes.is_empty() {
-                output.push_str(&format!(" class=\"{}\"", classes.trim()));
+            if self.is_self_closing {
+                output.push('/');
             }
 
-            if !attributes.is_empty() {
-                output.push_str(&format!(" {}", attributes).to_string());
-            }
+            output.push('>');
         }
-
-        if self.is_self_closing {
-            output.push('/');
-        }
-
-        output.push('>');
 
         if pretty {
             return pretty_print(&output, self.depth);
@@ -150,7 +159,10 @@ impl DocumentNode {
     }
 
     fn render_end(&self, pretty: bool) -> String {
-        let output = format!("</{}>", &self.tokens[0]);
+        let output = match self.is_comment {
+            true => "-->".to_string(),
+            false => format!("</{}>", &self.tokens[0])
+        };
 
         if pretty {
             return pretty_print(&output, self.depth);
@@ -303,8 +315,8 @@ fn split_tokens(s: String) -> Option<(Vec<String>, String)> {
     } else if s.starts_with("//-") {
         return None;
     } else if s.starts_with("//") {
-        // tokens.push("/");
-        // content.push_str(&s[2..].trim().to_string());
+        tokens.push("//".to_string());
+        content.push_str(&s[2..].trim().to_string());
     }
 
     if tokens.len() > 0 {
