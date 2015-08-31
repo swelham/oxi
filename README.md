@@ -29,5 +29,6 @@
   - [ ] mixins
   - [ ] inheritance (the ```extends``` feature)
   - [ ] includes (allows injection of content from another template)
+  - [ ] data binding
   - [ ] sort this list to group features and add the remaining features
   - [ ] write tests!
