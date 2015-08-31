@@ -50,6 +50,7 @@ impl Document {
         None
     }
 
+    // TODO: move this into the compiler mod
     pub fn compile(self, pretty: bool) -> String {
         let nodes = parse(self);
 
