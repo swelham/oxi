@@ -1,0 +1,29 @@
+doctype html
+//-
+    nested code
+    comment
+html
+    head
+        // html comment
+        link(href="http://example.com/example.css")
+        style
+            h1 { color: red; }
+            p { background-color: blue; color: white; }
+    body
+        //- code comment
+        //
+            nested html
+            comment
+        h1 header
+        #tag_with_id
+        .tag-with-class
+        div(data-with="attrs")
+            div#with.all.the(data-things="that", data-it="has")
+                p some content
+                | plain text
+        input(type="submit")
+        span/
+        footer
+            small footer text
+        script
+            console.log('from script');

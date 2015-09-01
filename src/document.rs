@@ -40,7 +40,7 @@ impl Document {
         }
 
         // TODO: this isn't future proof, will need fixing
-        match self.contents.lines().collect::<Vec<_>>()[0] {
+        match self.contents.lines().collect::<Vec<_>>()[0].trim() {
             "doctype html" => self.doctype = DOCTYPE_HTML,
             "doctype xml" => self.doctype = DOCTYPE_XML,
             "doctype json" => self.doctype = DOCTYPE_JSON,

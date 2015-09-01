@@ -1,0 +1,11 @@
+doctype xml
+root
+    sub-root
+        people(count="2")
+            person
+                name Example Person 1
+                img profile.jpg
+            person
+                name Example Person 2
+                img profile.jpg
+        meta(some="data")/
