@@ -45,3 +45,6 @@
   - [ ] data binding
   - [ ] sort this list to group features and add the remaining features
   - [ ] write documentation
+  - [ ] testing
+     - [ ] currently test are validating multiple features, break this down
+     - [ ] unit tests
