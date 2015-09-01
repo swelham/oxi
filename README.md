@@ -44,5 +44,4 @@
      - [ ] include filtered file (using ```include:markdown ./file.md``` syntax)
   - [ ] data binding
   - [ ] sort this list to group features and add the remaining features
-  - [ ] write tests!
   - [ ] write documentation
