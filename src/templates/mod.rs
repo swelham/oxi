@@ -1,48 +1,34 @@
 extern crate glob;
 
+pub mod finder;
+mod template;
+
+use std::io;
+use std::io::prelude::*;
 use std::path::PathBuf;
+use std::fs::File;
 
-pub struct TemplateFinder {
-    pub root_dir: &'static str
+pub fn parse(buf: PathBuf) -> Result<template::Template, io::Error> {
+    let mut f = try!(File::open(buf));
+
+    let mut contents = String::new();
+    try!(f.read_to_string(&mut contents));
+
+    Ok(template::Template {
+        content: contents
+    })
 }
-
-impl TemplateFinder {
-    pub fn find_all(self) -> Vec<PathBuf> {
-        // TODO: glob seems to have issues when a wildcard is
-        //       preseeded by a windows seperator. adding a
-        //       UNIX seperator (even if the string ends \\)
-        //       still works. need to investigate!
-        let mut path = String::from(self.root_dir);
-
-        if !path.ends_with("/") {
-            path.push_str("/");
-        }
-
-        path.push_str("**/*.roxi");
-
-        let paths = glob::glob(path.as_ref()).unwrap();
-        let mut bufs: Vec<PathBuf> = Vec::new();
-
-        for path in paths.filter_map(Result::ok) {
-            bufs.push(path);
-        }
-
-        bufs
-    }
-}
-
 
 #[cfg(test)]
 mod tests {
-    use super::TemplateFinder;
+    use std::path::PathBuf;
 
     #[test]
-    fn should_find_templates() {
-        let finder = TemplateFinder{
-            root_dir: "./tests/fixtures/finder/"
-        };
-        let templates = finder.find_all();
+    fn should_return_template_instance() {
+        let path = PathBuf::from("./tests/fixtures/bare.roxi");
+        let template = super::parse(path).unwrap();
+        let content = template.content;
 
-        assert_eq!(3, templates.len());
+        assert_eq!(content, "doctype html\nhtml\n    head\n    body\n".to_string());
     }
 }
