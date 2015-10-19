@@ -24,6 +24,6 @@ mod tests {
         let path = PathBuf::from("./tests/fixtures/bare.roxi");
         let content = super::transpile(path);
 
-        assert_eq!(content, "doctype html\nhtml\n    head\n    body\n".to_string());
+        assert_eq!(content, "<!DOCTYPE html><html><head></head><body></body></html>".to_string());
     }
 }
