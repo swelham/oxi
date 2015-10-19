@@ -8,6 +8,7 @@ use templates::finder::TemplateFinder;
 
 pub fn build_templates(root_dir: &'static str) {
     // this is just a temp implementation that
+    // TODO: write template to out_dir
 
     let finder = TemplateFinder {
         root_dir: root_dir
@@ -16,7 +17,7 @@ pub fn build_templates(root_dir: &'static str) {
     let paths = finder.find_all();
 
     for path in paths {
-        templates::parse(path);
+        templates::transpile(path);
     }
 
     // let out_dir = env::var("OUT_DIR").unwrap();

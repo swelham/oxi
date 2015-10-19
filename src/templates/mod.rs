@@ -2,21 +2,17 @@ extern crate glob;
 
 pub mod finder;
 mod template;
+mod parser;
 
-use std::io;
-use std::io::prelude::*;
 use std::path::PathBuf;
-use std::fs::File;
 
-pub fn parse(buf: PathBuf) -> Result<template::Template, io::Error> {
-    let mut f = try!(File::open(buf));
+pub fn transpile(buf: PathBuf) -> String {
+    let content = match template::transpile(buf) {
+        Ok(out) => out,
+        Err(e) => panic!(e)
+    };
 
-    let mut contents = String::new();
-    try!(f.read_to_string(&mut contents));
-
-    Ok(template::Template {
-        content: contents
-    })
+    content
 }
 
 #[cfg(test)]
@@ -26,8 +22,7 @@ mod tests {
     #[test]
     fn should_return_template_instance() {
         let path = PathBuf::from("./tests/fixtures/bare.roxi");
-        let template = super::parse(path).unwrap();
-        let content = template.content;
+        let content = super::transpile(path);
 
         assert_eq!(content, "doctype html\nhtml\n    head\n    body\n".to_string());
     }
