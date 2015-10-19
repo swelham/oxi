@@ -19,11 +19,11 @@ pub fn transpile(buf: PathBuf) -> String {
 mod tests {
     use std::path::PathBuf;
 
-    #[test]
-    fn should_return_template_instance() {
-        let path = PathBuf::from("./tests/fixtures/bare.roxi");
-        let content = super::transpile(path);
-
-        assert_eq!(content, "<!DOCTYPE html><html><head></head><body></body></html>".to_string());
-    }
+    // #[test]
+    // fn should_return_template_instance() {
+    //     let path = PathBuf::from("./tests/fixtures/bare.roxi");
+    //     let content = super::transpile(path);
+    //
+    //     assert_eq!(content, "<!DOCTYPE html><html><head></head><body></body></html>".to_string());
+    // }
 }
