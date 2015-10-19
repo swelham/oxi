@@ -3,7 +3,7 @@ extern crate glob;
 use std::path::PathBuf;
 
 pub struct TemplateFinder {
-    root_dir: &'static str
+    pub root_dir: &'static str
 }
 
 impl TemplateFinder {
@@ -32,12 +32,17 @@ impl TemplateFinder {
 }
 
 
-#[test]
-fn should_find_templates() {
-    let finder = TemplateFinder{
-        root_dir: "./tests/fixtures/finder/"
-    };
-    let templates = finder.find_all();
+#[cfg(test)]
+mod tests {
+    use super::TemplateFinder;
 
-    assert_eq!(3, templates.len());
+    #[test]
+    fn should_find_templates() {
+        let finder = TemplateFinder{
+            root_dir: "./tests/fixtures/finder/"
+        };
+        let templates = finder.find_all();
+
+        assert_eq!(3, templates.len());
+    }
 }
